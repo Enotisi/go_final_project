@@ -1,9 +1,16 @@
 package models
 
+import "github.com/golang-jwt/jwt/v5"
+
 type Task struct {
 	Id      int    `json:"id"`
 	Date    string `json:"date"`
 	Title   string `json:"title"`
 	Comment string `json:"comment"`
 	Repeat  string `json:"repeat"`
+}
+
+type PasswordRequest struct {
+	Password string `json:"password"`
+	jwt.RegisteredClaims
 }

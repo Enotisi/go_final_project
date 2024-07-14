@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"path/filepath"
 
 	"github.com/Enotisi/go_final_project/internal/config"
 	"github.com/Enotisi/go_final_project/internal/handlers"
@@ -11,15 +10,10 @@ import (
 
 func StartServer() error {
 
-	path, err := filepath.Abs("./web")
-
-	if err != nil {
-		return err
-	}
-
 	r := chi.NewRouter()
 
-	r.Handle("/*", http.FileServer(http.Dir(path)))
+	r.HandleFunc("/*", handlers.WebHandler)
+	r.Post("/api/sign", handlers.SignHandle)
 	r.Get("/api/nextdate", handlers.NextDateHandle)
 	r.Get("/api/tasks", handlers.TasksListHandle)
 	r.Get("/api/task", handlers.GetTaskHandle)
