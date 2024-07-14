@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,7 +19,7 @@ func NextDateHandle(w http.ResponseWriter, r *http.Request) {
 	date := r.URL.Query().Get("date")
 	repeat := r.URL.Query().Get("repeat")
 
-	nowDate, err := time.Parse("20060102", now)
+	nowDate, err := time.Parse(actions.DateTemplate, now)
 
 	if err != nil {
 		http.Error(w, "Недопустимый формат даты", http.StatusBadRequest)
@@ -31,7 +32,9 @@ func NextDateHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	w.Write([]byte(nextDate.Format("20060102")))
+	if _, err := w.Write([]byte(nextDate.Format(actions.DateTemplate))); err != nil {
+		log.Printf("error return responce at NextDateHandle: %s\n", err.Error())
+	}
 }
 
 func CreateTaskHandle(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +64,9 @@ func CreateTaskHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(resp))
+	if _, err := w.Write([]byte(resp)); err != nil {
+		log.Printf("error return responce at CreateTaskHandle: %s\n", err.Error())
+	}
 }
 
 func TasksListHandle(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +88,9 @@ func TasksListHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(resp))
+	if _, err := w.Write([]byte(resp)); err != nil {
+		log.Printf("error return responce at TasksListHandle: %s\n", err.Error())
+	}
 
 }
 
@@ -109,7 +116,9 @@ func GetTaskHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	if _, err := w.Write(resp); err != nil {
+		log.Printf("error return responce at GetTaskHandle: %s\n", err.Error())
+	}
 }
 
 func UpdateTaskHandle(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,14 +13,19 @@ type Config struct {
 
 var Conf Config
 
-func InitializationConfig() {
+func InitConfig() error {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file. Error - %s", err.Error())
-		return
+		return err
 	}
 
 	Conf = Config{
 		ServerPort: os.Getenv("TODO_PORT"),
 		BasePath:   os.Getenv("TODO_DBFILE"),
 	}
+
+	if Conf.ServerPort == "" {
+		Conf.ServerPort = "7540"
+	}
+
+	return nil
 }

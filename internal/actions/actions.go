@@ -11,13 +11,15 @@ import (
 
 var db *sql.DB
 
-func InitializationAction(dataBase *sql.DB) {
+const DateTemplate = "20060102"
+
+func InitAction(dataBase *sql.DB) {
 	db = dataBase
 }
 
 func NextDate(now time.Time, date string, repeat string) (time.Time, error) {
 
-	startDate, err := time.Parse("20060102", date)
+	startDate, err := time.Parse(DateTemplate, date)
 
 	if err != nil {
 		return now, err
@@ -83,7 +85,7 @@ func TasksList(search string) ([]models.Task, error) {
 	if search == "" {
 		query = "SELECT * FROM scheduler ORDER BY date"
 	} else if date, err := time.Parse("02.01.2006", search); err == nil {
-		dateSearch = date.Format("20060102")
+		dateSearch = date.Format(DateTemplate)
 		query = "SELECT * FROM scheduler WHERE date = :date ORDER BY date"
 	} else {
 		textSearch = "%" + search + "%"
@@ -170,7 +172,7 @@ func DoneTask(id string) error {
 			return err
 		}
 
-		task.Date = newDate.Format("20060102")
+		task.Date = newDate.Format(DateTemplate)
 		err = UpdateTask(task, false)
 		return err
 	} else {
@@ -204,7 +206,7 @@ func checkTaskData(task *models.Task) error {
 	nowData := time.Now()
 
 	if task.Repeat != "" {
-		newDate, err := NextDate(nowData, nowData.Format("20060102"), task.Repeat)
+		newDate, err := NextDate(nowData, nowData.Format(DateTemplate), task.Repeat)
 		if err != nil {
 			return err
 		}
@@ -215,7 +217,7 @@ func checkTaskData(task *models.Task) error {
 	if task.Date == "" {
 		taskDate = nowData
 	} else {
-		dateParse, err := time.Parse("20060102", task.Date)
+		dateParse, err := time.Parse(DateTemplate, task.Date)
 		if err != nil {
 			return err
 		}
@@ -227,7 +229,7 @@ func checkTaskData(task *models.Task) error {
 		}
 	}
 
-	task.Date = taskDate.Format("20060102")
+	task.Date = taskDate.Format(DateTemplate)
 
 	return nil
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func MustBeStartServer() {
+func StartServer() error {
 
 	path, err := filepath.Abs("./web")
 
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	r := chi.NewRouter()
@@ -29,11 +29,10 @@ func MustBeStartServer() {
 	r.Put("/api/task", handlers.UpdateTaskHandle)
 
 	port := config.Conf.ServerPort
-	if port == "" {
-		port = "7540"
-	}
 
 	if err := http.ListenAndServe(":"+port, r); err != nil {
-		panic(err.Error())
+		return err
 	}
+
+	return nil
 }
