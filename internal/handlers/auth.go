@@ -65,16 +65,34 @@ func WebHandler(w http.ResponseWriter, r *http.Request) {
 
 	url := r.URL.Path
 
-	if (strings.Contains(url, ".html") || url == "/") && config.Conf.Password != "" {
-		http.ServeFile(w, r, config.Conf.WebPath+"/login.html")
-	} else {
-		http.FileServer(http.Dir(config.Conf.WebPath)).ServeHTTP(w, r)
+	if config.Conf.Password != "" && url != "/login.html" && (strings.Contains(url, ".html") || url == "/") {
+
+		tokenStr, err := checkCookie(r)
+		if err != nil {
+			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
+			return
+		}
+
+		valid, err := checkToken(tokenStr)
+		if err != nil {
+			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
+			return
+		}
+
+		if !valid {
+			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
+			return
+		}
 	}
+
+	http.FileServer(http.Dir(config.Conf.WebPath)).ServeHTTP(w, r)
+
 }
 
 func MiddlewareHandle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if config.Conf.Password != "" {
+
 			tokenStr, err := checkCookie(r)
 			if err != nil {
 				http.Error(w, createJsonResponse("error", err.Error()), http.StatusUnauthorized)
