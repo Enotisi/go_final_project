@@ -14,13 +14,17 @@ func StartServer() error {
 
 	r.HandleFunc("/*", handlers.WebHandler)
 	r.Post("/api/sign", handlers.SignHandle)
-	r.Get("/api/nextdate", handlers.NextDateHandle)
-	r.Get("/api/tasks", handlers.TasksListHandle)
-	r.Get("/api/task", handlers.GetTaskHandle)
-	r.Post("/api/task", handlers.CreateTaskHandle)
-	r.Delete("/api/task", handlers.DeleteTaskHandle)
-	r.Post("/api/task/done", handlers.DoneTaskHandle)
-	r.Put("/api/task", handlers.UpdateTaskHandle)
+
+	r.Group(func(r chi.Router) {
+		r.Use(handlers.MiddlewareHandle)
+		r.Get("/api/nextdate", handlers.NextDateHandle)
+		r.Get("/api/tasks", handlers.TasksListHandle)
+		r.Get("/api/task", handlers.GetTaskHandle)
+		r.Post("/api/task", handlers.CreateTaskHandle)
+		r.Delete("/api/task", handlers.DeleteTaskHandle)
+		r.Post("/api/task/done", handlers.DoneTaskHandle)
+		r.Put("/api/task", handlers.UpdateTaskHandle)
+	})
 
 	port := config.Conf.ServerPort
 

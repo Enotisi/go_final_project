@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -70,4 +72,31 @@ func WebHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.FileServer(http.Dir(config.Conf.WebPath)).ServeHTTP(w, r)
 	}
+}
+
+func MiddlewareHandle(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.Conf.Password != "" {
+			tokenStr, err := checkCookie(r)
+			if err != nil {
+				http.Error(w, createJsonResponse("error", err.Error()), http.StatusUnauthorized)
+			}
+			fmt.Println(tokenStr)
+
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func checkCookie(r *http.Request) (string, error) {
+	cookie, err := r.Cookie("token")
+
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return "", errors.New("требуется аутентификация")
+		}
+		return "", err
+	}
+
+	return cookie.Value, nil
 }
