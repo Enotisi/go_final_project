@@ -13,7 +13,7 @@ func StartServer() error {
 	r := chi.NewRouter()
 
 	r.HandleFunc("/*", handlers.WebHandler)
-	r.Post("/api/sign", handlers.SignHandle)
+	r.Post("/api/signin", handlers.SignHandle)
 
 	r.Group(func(r chi.Router) {
 		r.Use(handlers.MiddlewareHandle)

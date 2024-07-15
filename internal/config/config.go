@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -30,22 +29,14 @@ func InitConfig() error {
 	}
 
 	Conf = Config{
-		ServerPort:    os.Getenv("TODO_PORT"),
-		BasePath:      os.Getenv("TODO_DBFILE"),
-		Password:      os.Getenv("TODO_PASSWORD"),
-		WebPath:       path,
-		TokenLifeTime: 0,
+		ServerPort: os.Getenv("TODO_PORT"),
+		BasePath:   os.Getenv("TODO_DBFILE"),
+		Password:   os.Getenv("TODO_PASSWORD"),
+		WebPath:    path,
 	}
 
 	if Conf.ServerPort == "" {
 		Conf.ServerPort = "7540"
-	}
-
-	lifetime, err := strconv.Atoi(os.Getenv("TODO_TOKEN_LIFETIME"))
-	if err != nil {
-		Conf.TokenLifeTime = 8
-	} else {
-		Conf.TokenLifeTime = lifetime
 	}
 
 	return nil

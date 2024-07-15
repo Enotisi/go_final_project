@@ -1,14 +1,14 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/Enotisi/go_final_project/internal/config"
 	"github.com/Enotisi/go_final_project/internal/models"
@@ -38,12 +38,11 @@ func SignHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokeLifetime := time.Now().Add(time.Duration(config.Conf.TokenLifeTime) * time.Hour)
-	passwordData.RegisteredClaims = jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(tokeLifetime),
+	claims := jwt.MapClaims{
+		"hash": getHash(passwordData.Password),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, passwordData)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString([]byte(sercretKey))
 
 	if err != nil {
@@ -52,9 +51,8 @@ func SignHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenStr,
-		Expires: tokeLifetime,
+		Name:  "token",
+		Value: tokenStr,
 	})
 
 	resp := createJsonResponse("token", tokenStr)
@@ -81,8 +79,15 @@ func MiddlewareHandle(next http.Handler) http.Handler {
 			if err != nil {
 				http.Error(w, createJsonResponse("error", err.Error()), http.StatusUnauthorized)
 			}
-			fmt.Println(tokenStr)
 
+			valid, err := checkToken(tokenStr)
+			if err != nil {
+				http.Error(w, createJsonResponse("error", err.Error()), http.StatusBadRequest)
+			}
+
+			if !valid {
+				http.Error(w, createJsonResponse("error", "неверный токен"), http.StatusUnauthorized)
+			}
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -99,4 +104,41 @@ func checkCookie(r *http.Request) (string, error) {
 	}
 
 	return cookie.Value, nil
+}
+
+func checkToken(tokenStr string) (bool, error) {
+	jwtToken, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		return []byte(sercretKey), nil
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return false, nil
+	}
+
+	hash, ok := claims["hash"]
+	if !ok {
+		return false, nil
+	}
+
+	hashStr, ok := hash.(string)
+	if !ok {
+		return false, nil
+	}
+
+	if hashStr != getHash(config.Conf.Password) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func getHash(text string) string {
+	h := md5.New()
+	h.Write([]byte(text))
+	return hex.EncodeToString(h.Sum(nil))
 }
