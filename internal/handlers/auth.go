@@ -92,19 +92,21 @@ func WebHandler(w http.ResponseWriter, r *http.Request) {
 func MiddlewareHandle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if config.Conf.Password != "" {
-
 			tokenStr, err := checkCookie(r)
 			if err != nil {
 				http.Error(w, createJsonResponse("error", err.Error()), http.StatusUnauthorized)
+				return
 			}
 
 			valid, err := checkToken(tokenStr)
 			if err != nil {
 				http.Error(w, createJsonResponse("error", err.Error()), http.StatusBadRequest)
+				return
 			}
 
 			if !valid {
 				http.Error(w, createJsonResponse("error", "неверный токен"), http.StatusUnauthorized)
+				return
 			}
 		}
 		next.ServeHTTP(w, r)
