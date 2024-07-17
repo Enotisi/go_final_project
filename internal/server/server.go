@@ -14,10 +14,10 @@ func StartServer() error {
 
 	r.HandleFunc("/*", handlers.WebHandler)
 	r.Post("/api/signin", handlers.SignHandle)
+	r.Get("/api/nextdate", handlers.NextDateHandle)
 
 	r.Group(func(r chi.Router) {
 		r.Use(handlers.MiddlewareHandle)
-		r.Get("/api/nextdate", handlers.NextDateHandle)
 		r.Get("/api/tasks", handlers.TasksListHandle)
 		r.Get("/api/task", handlers.GetTaskHandle)
 		r.Post("/api/task", handlers.CreateTaskHandle)

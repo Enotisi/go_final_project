@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/Enotisi/go_final_project/internal/config"
 	"github.com/Enotisi/go_final_project/internal/models"
@@ -62,31 +61,7 @@ func SignHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func WebHandler(w http.ResponseWriter, r *http.Request) {
-
-	url := r.URL.Path
-
-	if config.Conf.Password != "" && url != "/login.html" && (strings.Contains(url, ".html") || url == "/") {
-
-		tokenStr, err := checkCookie(r)
-		if err != nil {
-			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
-			return
-		}
-
-		valid, err := checkToken(tokenStr)
-		if err != nil {
-			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
-			return
-		}
-
-		if !valid {
-			http.Redirect(w, r, "/login.html", http.StatusSeeOther)
-			return
-		}
-	}
-
 	http.FileServer(http.Dir(config.Conf.WebPath)).ServeHTTP(w, r)
-
 }
 
 func MiddlewareHandle(next http.Handler) http.Handler {

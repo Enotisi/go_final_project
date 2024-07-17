@@ -144,6 +144,9 @@ func UpdateTaskHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte("{}")); err != nil {
+		log.Printf("error return responce at GetTaskHandle: %s\n", err.Error())
+	}
 }
 
 func DoneTaskHandle(w http.ResponseWriter, r *http.Request) {
@@ -162,6 +165,9 @@ func DoneTaskHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte("{}")); err != nil {
+		log.Printf("error return responce at GetTaskHandle: %s\n", err.Error())
+	}
 }
 
 func DeleteTaskHandle(w http.ResponseWriter, r *http.Request) {
@@ -180,6 +186,9 @@ func DeleteTaskHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte("{}")); err != nil {
+		log.Printf("error return responce at GetTaskHandle: %s\n", err.Error())
+	}
 }
 
 func createJsonResponse(title, text string) string {

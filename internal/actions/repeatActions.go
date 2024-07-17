@@ -40,6 +40,17 @@ func repeatByDays(now time.Time, date *time.Time, repeat string) error {
 	return nil
 }
 
+func repeatByYear(now time.Time, date *time.Time) error {
+
+	for {
+		*date = date.AddDate(1, 0, 0)
+
+		if date.After(now) {
+			return nil
+		}
+	}
+}
+
 func repeatByWeek(now time.Time, date *time.Time, repeat string) error {
 
 	repeatRule := strings.Split(repeat, " ")
@@ -50,7 +61,9 @@ func repeatByWeek(now time.Time, date *time.Time, repeat string) error {
 
 	weekDaysString := strings.Split(repeatRule[1], ",")
 
-	dates := make([]time.Time, len(weekDaysString), len(weekDaysString))
+	dates := make([]time.Time, len(weekDaysString))
+
+	fixedDate := *date
 
 	for index, dayString := range weekDaysString {
 
@@ -63,7 +76,7 @@ func repeatByWeek(now time.Time, date *time.Time, repeat string) error {
 			return errors.New("некорректный день недели")
 		}
 		wg.Add(1)
-		go nextDayByWeekNumber(now, *date, day, index, dates)
+		go nextDayByWeekNumber(now, fixedDate, day, index, dates)
 	}
 	wg.Wait()
 
@@ -74,7 +87,6 @@ func repeatByWeek(now time.Time, date *time.Time, repeat string) error {
 }
 
 func repeatByMonthDay(now time.Time, date *time.Time, repeat string) error {
-
 	repeatRule := strings.Split(repeat, " ")
 
 	if len(repeatRule) < 2 {
@@ -96,6 +108,10 @@ func repeatByMonthDay(now time.Time, date *time.Time, repeat string) error {
 			return err
 		}
 
+		if dayNum > 31 || dayNum < -2 || dayNum == 0 {
+			return errors.New("недопустимое значение дня")
+		}
+
 		days = append(days, dayNum)
 	}
 
@@ -109,35 +125,43 @@ func repeatByMonthDay(now time.Time, date *time.Time, repeat string) error {
 				return err
 			}
 
+			if monthNum < 1 || monthNum > 12 {
+				return errors.New("недопустимое значение месяца")
+			}
+
 			months = append(months, monthNum)
 		}
 	}
 	var dates []time.Time
 	if len(months) != 0 {
-		dates = make([]time.Time, len(days)*len(months), len(days)*len(months))
+		dates = make([]time.Time, len(days)*len(months))
 	} else {
-		dates = make([]time.Time, len(days), len(days))
+		dates = make([]time.Time, len(days))
 	}
+
+	fixedDate := *date
 
 	for dayIndex, day := range days {
 
 		if len(months) > 0 {
 			for mothIndex, month := range months {
-				nextDayByMonthNumber(now, *date, day, month, dayIndex*len(months)+mothIndex, dates)
+				wg.Add(1)
+				go nextDayByMonthNumber(now, fixedDate, day, month, dayIndex*len(months)+mothIndex, dates)
 			}
 			continue
 		}
 
-		nextDayByMonthNumber(now, *date, day, 0, dayIndex, dates)
+		wg.Add(1)
+		go nextDayByMonthNumber(now, fixedDate, day, 0, dayIndex, dates)
 	}
-
+	wg.Wait()
 	sortSliceDates(dates, true)
 	*date = dates[0]
 
 	return nil
 }
 
-func nextDayByMonthNumber(now, date time.Time, dayNumber, monthNumber int, arrayIndex int, dateArray []time.Time) {
+func nextDayByMonthNumber(now time.Time, date time.Time, dayNumber, monthNumber int, arrayIndex int, dateArray []time.Time) {
 	defer wg.Done()
 	for {
 		date = date.AddDate(0, 0, 1)
@@ -147,7 +171,7 @@ func nextDayByMonthNumber(now, date time.Time, dayNumber, monthNumber int, array
 		}
 		fixedDayNumber := dayNumber
 		if dayNumber < 0 {
-			fixedDayNumber = dayInMonth(date) + dayNumber
+			fixedDayNumber = dayInMonth(date) + dayNumber + 1
 		}
 
 		if date.Day() != fixedDayNumber {
@@ -167,7 +191,7 @@ func nextDayByWeekNumber(now time.Time, date time.Time, weekDay int, arrayIndex 
 	defer wg.Done()
 	startDate := date
 
-	for int(date.Weekday()) != weekDay%7 || now.After(date) || startDate.Equal(date) {
+	for int(date.Weekday()) != weekDay%7 || now.After(date) || now.Equal(date) || startDate.Equal(date) {
 		date = date.AddDate(0, 0, 1)
 	}
 	dateArray[arrayIndex] = date
